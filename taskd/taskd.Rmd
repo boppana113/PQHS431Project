@@ -1,9 +1,39 @@
 ---
 title: "taskd"
-author: "Sriram Boppana"
+author: "Sriram Boppana and Connor Swingle"
 date: "November 19, 2017"
 output: html_document
 ---
+#Study design
+
+##Research Question
+What is the effect of undiagnosed diabetes on urine albumin concentration while adjusting for age, physical activity, and BMI in Americans? We hypothesize that there will be a strong correlation between urine albumin concentration and having undiagnosed diabetes. High urine albumin concentration is an indicator of renal disease, so we predict that those with an undiagnosed diabetes condition will be more likely to have signs of renal disease than those with a diagnosed diabetes condition. We will be able to determine if a respondent has undiagnosed diabetes by looking at the glycohemoglobin test results and crosscheck it with their response about a current diabetes diagnostic. 
+
+##Data Collection
+We will be using the NHANES 2013-2014 dataset. NHANES is the National Health and Nutrition Examination Survey, and has been assessing the health and nutritional status of adults and children in the United States since the early 1960s. NHANES is an initiative of the Center for Disease Control and Prevention (CDC). Since 1999, NHANES has become a continuous program involving both an examination of medical, dental, and physiological measurements as well as a laboratory test. The data collection team consists of a physician, health technicians as well as dietary and health interviewers. Health interviews occur at participants home, and questions are given and responses noted on a computer. The target population for NHANES is the noninstitutionalized civilian population of the United States. To select a population to sample, NHANES first starts by selecting contiguous counties to be primary sampling units. Within the PSU segments are picked to contain a cluster of households, which is then narrowed down to specific households. Then, individuals within that household are selected. In the 2013-2014 dataset, 14,332 persons were initially selected from 30 different primary sampling units. Of those selected, 10,175 completed the interview and 9,813 were examined.
+
+We will looking at the impact of an undiagnosed diabetes condition on renal function. By comparing hemoglobin A1c levels from the blood sample with the previous diabetes diagnosis survey question data, we will be able to determine if a respondent has undiagnosed diabetes. Our primary predictors of interest are age, weight, activity and blood pressure. These 4 factors are found in the NHANES 2013-2014 questionaire data set. 
+
+#Codebook
+
+##albumin
+This variable represents the measurement of human urinary albumin. The standard concentration of human urinary albumin is .5-20ug/ml. Human urinary albumin concentration is measured to diagnose kidney or liver disease. Increased albumin is a sign of renal disease and predictive of nephropathy in patients with type 1 and type 2 diabetes. If the albumin concentration was omitted or incomplete, the patient data was removed in the filtered data.
+
+##a1c_hemoglobin
+Diabetes can be assessed by measuring the blood glycohemoglobin level.  A1c hemoglobin is the specific type of hemoglobin that is used to diagnose diabetes. It is reported as a percent in the range of 3.5% to 17.5%. 
+
+##diagnoses
+This refers to the respondent's self reported diabetes diagnoses. 
+
+##physical_activity
+This data comes from the questionnaire portion. Patients were asked to report the number of days in the past week where they had at least 60 minutes of physical activity. 
+
+##age
+This is the respondent's age at the time of test as reported in years. 
+
+##BMI
+This is the body mass index of the patients. In the examination section of the test participant's height and weight were taken. They then calculated the body mass index as reported in lb/foot^2.
+
 
 
 ```{r install nhanesA}
@@ -27,7 +57,6 @@ library(nhanesA)
 library(tidyverse)
 ```
 
-Uploading the raw data and export it to CSV
 ```{r Raw data}
 browseNHANES(2013, 'LAB', 'ALB_CR_H') # open Albumin & Creatinine - Urine (ALB_CR_H) weblink
 browseNHANES(2013, 'LAB', 'GHB_H') # open glycemohemoglobin values
@@ -37,9 +66,8 @@ browseNHANES(2013, 'Q', 'PAQ_H') #physical activity
 browseNHANES(2013, 'DEMO', 'DEMO_H') #demographics for age
 
 alb <- nhanes('ALB_CR_H') %>%  #import data into raw_data_tible
-  select("SEQN", "URXUMA") %>%
-  filter(complete.cases("URXUMA")) #eliminate NA in outcome
-
+  select("SEQN", "URXUMA")
+  #filter(complete.cases("URXUMA")) #eliminate NA in outcome
 glyc <- nhanes('GHB_H')  %>%
   select("SEQN", "LBXGH")
   
@@ -63,15 +91,18 @@ raw_data = left_join(raw_data, wait, by = "SEQN")
 
 ```
 
-test new csv file
 ```{r upload raw data again}
 write.csv(raw_data, file = "raw_data_file.csv", row.names=FALSE) # export to csv file
 raw_data2 <- read_csv("raw_data_file.csv") #read same csv again for proof that the original csv was exported properly
-rename(ID = SEQN, raw_data2, albumin = URXUMA, a1c_hemoglobin = LBXGH, diagnoses = DIQ010, physical_activity= PAQ706, age = RIDAGEYR, BMI = BMXBMI)
+rename(raw_data2, ID = SEQN, albumin = URXUMA, a1c_hemoglobin = LBXGH, diagnoses = DIQ010, physical_activity= PAQ706, age = RIDAGEYR, BMI = BMXBMI)
 
 ```
 
 ```{r filter data}
-write.csv(raw_data2, file = "filtered_data.csv", row.names=FALSE)
-```
+raw_data3 <- raw_data2 %>%
+  filter(complete.cases("raw_data3$URXUMA"))
 
+rename(raw_data3, ID = SEQN, albumin = URXUMA, a1c_hemoglobin = LBXGH, diagnoses = DIQ010, physical_activity= PAQ706, age = RIDAGEYR, BMI = BMXBMI)
+
+write.csv(raw_data3, file = "filtered_data.csv", row.names=FALSE) #Generate the filtered data
+```
