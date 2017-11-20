@@ -32,25 +32,46 @@ Uploading the raw data and export it to CSV
 browseNHANES(2013, 'LAB', 'ALB_CR_H') # open Albumin & Creatinine - Urine (ALB_CR_H) weblink
 browseNHANES(2013, 'LAB', 'GHB_H') # open glycemohemoglobin values
 browseNHANES(2013, 'Q', 'DIQ_H') #open data for diabetes questionare
-browseNHANES(2013, 'Q', 'BPQ_H') #blood pressure
+browseNHANES(2013, 'E', 'BMX_H') #body measurements
 browseNHANES(2013, 'Q', 'PAQ_H') #physical activity
 browseNHANES(2013, 'DEMO', 'DEMO_H') #demographics for age
 
+alb <- nhanes('ALB_CR_H') %>%  #import data into raw_data_tible
+  select("SEQN", "URXUMA") %>%
+  filter(complete.cases("URXUMA")) #eliminate NA in outcome
 
-raw_data <- nhanes('ALB_CR_H')  #import data into raw_data_tible
+glyc <- nhanes('GHB_H')  %>%
+  select("SEQN", "LBXGH")
+  
+diab <- nhanes('DIQ_H') %>%  #import data into raw_data_tible
+  select("SEQN", "DIQ010")
+
+act <- (nhanes('PAQ_G')) %>% #days of 60mins of physical activity a day
+  select("SEQN", "PAQ706")
+
+age <- (nhanes('DEMO_H')) %>% 
+  select("SEQN", "RIDAGEYR")
+
+wait <- (nhanes('BMX_H')) %>% #BMI
+  select("SEQN", "BMXBMI")
+
+raw_data = left_join(alb, glyc, by = "SEQN") #combining everything together
+raw_data = left_join(raw_data, diab, by = "SEQN")
+raw_data = left_join(raw_data,act, by = "SEQN")
+raw_data = left_join(raw_data, age, by = "SEQN")
+raw_data = left_join(raw_data, wait, by = "SEQN")
+
 write.csv(raw_data, file = "raw_data_file.csv", row.names=FALSE) # export to csv file
 ```
 
 test new csv file
 ```{r upload raw data again}
 raw_data2 <- read_csv("raw_data_file.csv") #read same csv again for proof that the original csv was exported properly
-raw_data2
+rename(ID = SEQN, raw_data2, albumin = URXUMA, a1c_hemoglobin = LBXGH, diagnoses = DIQ010, physical_activity= PAQ706, age = RIDAGEYR, BMI = BMXBMI)
+
 ```
 
 ```{r filter data}
-filtered_data <- raw_data2 %>%
-  select("URXUMA") %>%
-  na.omit()
-write.csv(filtered_data, file = "filtered_data.csv")
+write.csv(raw_data2, file = "filtered_data.csv")
 ```
 
