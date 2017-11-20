@@ -1,1 +1,13 @@
-Task D upload
+This github page represents the efforts of Sriram Boppana and Connor Swinggle for PQHS 431 Project Task D (Fall 2017)
+
+Research Question
+What is the effect of undiagnosed diabetes on urine albumin concentration while adjusting for age, physical activity, and BMI in Americans? We hypothesize that there will be a strong correlation between urine albumin concentration and having undiagnosed diabetes. High urine albumin concentration is an indicator of renal disease, so we predict that those with an undiagnosed diabetes condition will be more likely to have signs of renal disease than those with a diagnosed diabetes condition. We will be able to determine if a respondent has undiagnosed diabetes by looking at the glycohemoglobin test results and crosscheck it with their response about a current diabetes diagnostic. 
+
+Data Collection
+We will be using the NHANES 2013-2014 dataset. NHANES is the National Health and Nutrition Examination Survey, and has been assessing the health and nutritional status of adults and children in the United States since the early 1960s. NHANES is an initiative of the Center for Disease Control and Prevention (CDC). Since 1999, NHANES has become a continuous program involving both an examination of medical, dental, and physiological measurements as well as a laboratory test. The data collection team consists of a physician, health technicians as well as dietary and health interviewers. Health interviews occur at participants home, and questions are given and responses noted on a computer. The target population for NHANES is the noninstitutionalized civilian population of the United States. To select a population to sample, NHANES first starts by selecting contiguous counties to be primary sampling units. Within the PSU segments are picked to contain a cluster of households, which is then narrowed down to specific households. Then, individuals within that household are selected. In the 2013-2014 dataset, 14,332 persons were initially selected from 30 different primary sampling units. Of those selected, 10,175 completed the interview and 9,813 were examined.
+
+We will looking at the impact of an undiagnosed diabetes condition on renal function. By comparing hemoglobin A1c levels from the blood sample with the previous diabetes diagnosis survey question data, we will be able to determine if a respondent has undiagnosed diabetes. Our primary predictors of interest are age, weight, activity and blood pressure. These 4 factors are found in the NHANES 2013-2014 questionaire data set. 
+
+The data was processed using R vs. 3.4.1
+The data importation/exportation can be found in the R markdown file.
+All that is needed is to put the Rmarkdown file in its own folder and simply run the file
