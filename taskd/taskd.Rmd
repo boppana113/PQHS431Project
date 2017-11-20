@@ -46,7 +46,7 @@ glyc <- nhanes('GHB_H')  %>%
 diab <- nhanes('DIQ_H') %>%  #import data into raw_data_tible
   select("SEQN", "DIQ010")
 
-act <- (nhanes('PAQ_G')) %>% #days of 60mins of physical activity a day
+act <- (nhanes('PAQ_H')) %>% #days of 60mins of physical activity a day
   select("SEQN", "PAQ706")
 
 age <- (nhanes('DEMO_H')) %>% 
@@ -61,17 +61,17 @@ raw_data = left_join(raw_data,act, by = "SEQN")
 raw_data = left_join(raw_data, age, by = "SEQN")
 raw_data = left_join(raw_data, wait, by = "SEQN")
 
-write.csv(raw_data, file = "raw_data_file.csv", row.names=FALSE) # export to csv file
 ```
 
 test new csv file
 ```{r upload raw data again}
+write.csv(raw_data, file = "raw_data_file.csv", row.names=FALSE) # export to csv file
 raw_data2 <- read_csv("raw_data_file.csv") #read same csv again for proof that the original csv was exported properly
 rename(ID = SEQN, raw_data2, albumin = URXUMA, a1c_hemoglobin = LBXGH, diagnoses = DIQ010, physical_activity= PAQ706, age = RIDAGEYR, BMI = BMXBMI)
 
 ```
 
 ```{r filter data}
-write.csv(raw_data2, file = "filtered_data.csv")
+write.csv(raw_data2, file = "filtered_data.csv", row.names=FALSE)
 ```
 
