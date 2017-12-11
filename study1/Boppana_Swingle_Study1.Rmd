@@ -1,0 +1,226 @@
+---
+title: "Boppana_Swingle_Study 1"
+author: "Sriram Boppana and Connor Swingle"
+date: "`r Sys.Date()`"
+output:
+  html_document: 
+    toc: yes
+    code_folding: show
+---
+
+#1 -  Setup in R
+```{r setup R and load packages, message=FALSE}
+knitr::opts_chunk$set(comment=NA)
+options(width = 70)
+
+## add additional libraries/packages here, as needed
+## leaving the tidyverse as the last package loaded
+library(readxl); library(hms); library(stringr); library(Epi); library(vcd)
+library(forcats); library(Hmisc); library(gridExtra); library(pander)
+library(tidyverse)
+source("Love-boost.R")
+```
+
+
+#2 -  What is this? 
+
+#3 - Importing the datasets
+```{r importing data}
+surv_raw <- read_excel("431-2017-project-survey-responses-raw-deid.xlsx")
+
+names_sur <- read_excel("431-2017-project-survey-names.xlsx")
+
+surv_tidy <- surv_raw
+
+names(surv_tidy) <- names_sur$short_name
+
+```
+
+```{r build_scales_etc}
+surv_tidy$Q051_Gould_score <- round(rowSums(surv_tidy[,52:60])/9,3)
+```
+
+#4 - Analysis 1 - Comparing Means of Two Populations
+
+##4.1 Boxplot Analysis
+```{r Analysis 1.1 Boxplot}
+by(surv_tidy$caffeine_Q021, surv_tidy$married_Q012, Hmisc::describe)
+
+married <- surv_tidy %>%
+  filter(married_Q012 == "Yes")
+unmarried <- surv_tidy %>%
+  filter(married_Q012 == "No")
+
+
+ggplot(surv_tidy, aes(x = surv_tidy$married_Q012, y = surv_tidy$caffeine_Q021, fill = surv_tidy$married_Q012)) +
+    geom_boxplot() +
+    geom_jitter(width = 0.1, height = 0, color = "orangered") +
+    guides(fill = FALSE) + 
+    labs(title = "Boxplot of Cups of Caffinated Beverages ingested by Married and Unmarried Individuals in One Week",
+         x = "Married?", y = "Cups of Caffinated Beverages") + 
+    coord_flip() +
+    theme_bw()
+
+```
+##4.2 Histogram Analysis
+```{r Analysis 1.2 Histogram}
+ggplot(surv_tidy, aes(x = caffeine_Q021, fill = married_Q012)) +
+    geom_histogram(color = "white", bins = 20) +
+    guides(fill = FALSE) + 
+    labs(title = "Histograms of Cafeinated Beverages taken by married and Unmarried Individuals",
+         x = "Cups of Cafeinated Beverages") +
+    theme_bw() +
+    facet_wrap(~ married_Q012)
+```
+```{r Analysis 1.3}
+ggplot(surv_tidy, aes(x = sqrt(caffeine_Q021), fill = married_Q012)) +
+    geom_histogram(color = "white", bins = 20) +
+    guides(fill = FALSE) + 
+    labs(title = "Histograms of Cafeinated Beverages taken by married and Unmarried Individuals",
+         x = "Square root of Cups of Cafeinated Beverages") +
+    theme_bw() +
+    facet_wrap(~ married_Q012)
+```
+
+```{r Analysis 1.4}
+ggplot(surv_tidy, aes(x = sqrt(caffeine_Q021), y = married_Q012, fill = caffeine_Q021)) +
+    ggridges::geom_density_ridges(scale = 1) +
+    guides(fill = FALSE) + 
+    labs(title = "Caffinated Beverages taken by Married and Unmarried Individuals",
+         x = "Caffeinated Beverages", y = "Married?") +
+    ggridges::theme_ridges()
+```
+
+```{r Analysis 1.5}
+surv_tidy %>% group_by(married_Q012) %>% 
+    summarise(n = n(), 
+              median = median(caffeine_Q021), 
+              Q1 = quantile(caffeine_Q021, 0.25), 
+              Q3 = quantile(caffeine_Q021, 0.75),
+              mean = mean(caffeine_Q021),
+              sd = sd(caffeine_Q021)) 
+```
+
+```{r Analysis 1.6}
+bootdif(surv_tidy$caffeine_Q021, surv_tidy$married_Q012, conf.level = 0.90)
+```
+
+#5 - Analysis 2 - Comparing Means of Three or More Groups
+
+```{r Analysis 2.1}
+#Hmisc::describe(surv_tidy$birth_year_Q001)
+
+birthyear <- surv_tidy$birth_year_Q001
+ggplot(surv_tidy, aes(x = birthyear, fill = birthyear)) +
+    geom_histogram(color = "white", bins = 50) +
+    guides(fill = FALSE) + 
+    labs(title = "Age") +
+    theme_bw() +
+    facet_wrap(~ married_Q012)
+```
+
+```{r Analysis 2.2}
+surv_tidy$birthgroup[surv_tidy$birth_year_Q001 < 1980] <- "Before 1980"
+surv_tidy$birthgroup[surv_tidy$birth_year_Q001 >= 1980 & surv_tidy$birth_year_Q001 < 1990] <- "1980-1990"
+surv_tidy$birthgroup[surv_tidy$birth_year_Q001 >= 1990 & surv_tidy$birth_year_Q001 < 2000] <- "After 1990"
+
+eda.ksam(outcome = surv_tidy$caffeine_Q021, group = surv_tidy$birthgroup, axis.title = "Caffeine by Birth group", main.title = "Birth Group vs Caffeine Intake", notch = FALSE)
+
+```
+```{r Analysis 2.3}
+anova(lm(surv_tidy$caffeine_Q021 ~ surv_tidy$birthgroup))
+
+```
+
+#6 - Analysis 3 - Regression Comparison of Means with Adjustments
+
+##6.1 - The Regression Model, Adjusting for a Single Quantitative Covariate
+```{r Analysis 3.1}
+Hmisc::describe(surv_tidy$facebook_Q035)
+
+```
+
+```{r Analysis 3.2}
+summary(lm(caffeine_Q021 ~ birthgroup + facebook_Q035, data = surv_tidy))
+
+```
+
+
+```{r Analysis 3.3}
+anova(lm(caffeine_Q021 ~ birthgroup + facebook_Q035, data = surv_tidy))
+
+```
+##6.2 - Predicting the outcome at the average level of the covariate for each group
+```{r Analysis 3.4}
+mean(surv_tidy$facebook_Q035)
+
+model1 <- lm(caffeine_Q021 ~ birthgroup + facebook_Q035, data = surv_tidy)
+model1
+new1 <- data.frame(birthgroup = c("Before 1980", "1980-1990", "After 1990"), facebook_Q035 = rep(mean(surv_tidy$facebook_Q035), 3))
+new1 # sanity check
+pander(predict(model1, newdata = new1, interval = "prediction", level = 0.90))
+```
+```{r Analysis 3.5}
+par(mfrow=c(1,2))
+plot(model1, which = 1:2)
+```
+
+# 7 - Analysis 4: Two-Way (2 x 2) Contingency Table
+
+## 7.1 - Building the 2x2 Table from data
+
+```{r Analysis 4.1}
+t1 <- table(surv_tidy$instrument_Q046, surv_tidy$smoked100_Q013)
+rownames(t1) <- c("Did not play instrument","Played instrument")
+colnames(t1) <- c("< 100 cigarettes", "> 100 cigarettes")
+emphasize.italics.rows(3)
+emphasize.italics.cols(3)
+panderOptions('table.emphasize.rownames', FALSE)
+pander(addmargins(t1), caption = "Musicial Instrument vs. Cigarette Smoking to 431")
+
+```
+```{r Analysis 4.2}
+twoby2(t1 + 2, conf.level = 0.90) # uses Bayesian augmentation, 90% confidence level
+```
+# 8 - Analysis 5: Two-Way (3 x 4) Contingency Table
+
+## 8.1 - Viewing the table
+```{r Analysis 5.1}
+t2 <- table(surv_tidy$computer_OS_Q071, surv_tidy$phone_OS_Q072)
+rownames(t2) <- c("iOS","Windows","Chrome")
+colnames(t2) <- c("iOS","Windows","Android","No smart phone")
+emphasize.italics.rows(3)
+emphasize.italics.cols(3)
+panderOptions('table.emphasize.rownames', FALSE)
+pander(addmargins(t2), caption = "Computer vs. Smart Phone Operating Systems")
+```
+
+```{r Analysis 5.2}
+chisq.test(t2)
+fisher.test(t2)
+assoc(t2)
+
+```
+
+# 9 - Analysis 6: Three-Way Contingency Table
+
+##9.1 Generating table
+```{r Analysis 6.1}
+t3.flat <- table(surv_tidy$gould_Q051a, surv_tidy$instrument_Q046, surv_tidy$smoked100_Q013)
+dimnames(t3.flat)[[1]] <- c("Low", "LowMedium", "Medium", "MediumHigh") # specify the names in t5's first variable
+dimnames(t3.flat)[[2]] <- c("Played Instrument", "No Instrument") # specify names in t5's second variable
+dimnames(t3.flat)[[3]] <- c("Smoked > 100", "Smoked<100") # specify names in t5's third variable
+ftable(t3.flat)
+
+```
+
+
+##9.2 Wolf Test
+```{r Analysis 6.2}
+
+woolf_test(t3.flat)
+```
+```{r Analysis 6.3}
+mantelhaen.test(t3, conf.level = .90)
+```
+
