@@ -1,0 +1,89 @@
+---
+title: "Boppana_Swingle_study1"
+author: "Sriram Boppana and Connor Swingle"
+date: "December 11, 2017"
+output: html_document
+---
+
+# Setup and Load R Packages
+
+```{r load packages, message = FALSE}
+library(readxl); library(hms); library(stringr)
+library(forcats); library(tidyverse)
+```
+
+## Importing and Renaming Project Survey Variables
+
+```{r}
+surv_raw <- read_excel("431-2017-project-survey-responses-raw-deid.xlsx")
+
+names_sur <- read_excel("431-2017-project-survey-names.xlsx")
+
+surv_tidy <- surv_raw
+
+names(surv_tidy) <- names_sur$short_name
+
+```
+
+## Building out Scales, etc. for Items 17, 51-56 and 78
+
+```{r build_scales_etc}
+surv_tidy$Q017a_Cleveland_Museum_of_Art <- str_detect(surv_tidy$attractions_Q017, "Cleveland Museum of Art")
+surv_tidy$Q017b_West_Side_Market <- str_detect(surv_tidy$attractions_Q017, "West Side Market")
+surv_tidy$Q017c_Cleveland_Metroparks_Zoo <- str_detect(surv_tidy$attractions_Q017, "Cleveland Metroparks Zoo")
+surv_tidy$Q017d_Cleveland_Metroparks_not_Zoo <- str_detect(surv_tidy$attractions_Q017, "Cleveland Metroparks Locations other than the Zoo")
+surv_tidy$Q017e_Cleveland_Museum_of_Natural_History <- str_detect(surv_tidy$attractions_Q017, "Cleveland Museum of Natural History")
+surv_tidy$Q017f_Severance_Hall <- str_detect(surv_tidy$attractions_Q017, "Severance Hall")
+surv_tidy$Q017g_Rock_and_Roll_Hall_of_Fame <- str_detect(surv_tidy$attractions_Q017, "Rock and Roll Hall of Fame")
+surv_tidy$Q017h_Cleveland_Botanical_Garden <- str_detect(surv_tidy$attractions_Q017, "Cleveland Botanical Garden")
+surv_tidy$Q017i_Quicken_Loans_Arena <- str_detect(surv_tidy$attractions_Q017, "Quicken Loans Arena")
+surv_tidy$Q017j_Edgewater_Park <- str_detect(surv_tidy$attractions_Q017, "Edgewater Park")
+surv_tidy$Q017k_Progressive_Field <- str_detect(surv_tidy$attractions_Q017, "Progressive Field")
+surv_tidy$Q017l_Cedar_Point <- str_detect(surv_tidy$attractions_Q017, "Cedar Point")
+surv_tidy$Q017m_Great_Lakes_Science_Center <- str_detect(surv_tidy$attractions_Q017, "Great Lakes Science Center")
+surv_tidy$Q017n_Blossom_Music_Center <- str_detect(surv_tidy$attractions_Q017, "Blossom Music Center")
+surv_tidy$Q017o_Lake_View_Cemetery <- str_detect(surv_tidy$attractions_Q017, "Lake View Cemetery")
+surv_tidy$Q017p_Playhouse_Square <- str_detect(surv_tidy$attractions_Q017, "Playhouse Square")
+surv_tidy$Q017q_First_Energy_Stadium <- str_detect(surv_tidy$attractions_Q017, "First Energy Stadium")
+surv_tidy$Q017r_Jacobs_Pavilion_at_Nautica <- str_detect(surv_tidy$attractions_Q017, "Jacobs Pavilion at Nautica")
+surv_tidy$Q017s_Whiskey_Island <- str_detect(surv_tidy$attractions_Q017, "Whiskey Island")
+
+surv_tidy$Q017_Total_Attractions_Visited <- rowSums(surv_tidy[,131:149])
+
+surv_tidy$Q051_Gould_score <- round(rowSums(surv_tidy[,52:60])/9,3)
+
+surv_tidy$Q052_extraversion <- surv_tidy$tipi_Q052a + (8 - surv_tidy$tipi_Q052e) 
+surv_tidy$Q052_agreeableness <- surv_tidy$tipi_Q052f + (8 - surv_tidy$tipi_Q052b)
+surv_tidy$Q052_conscientiousness <- surv_tidy$tipi_Q052c + (8 - surv_tidy$tipi_Q052g)
+surv_tidy$Q052_emotional_stability <- surv_tidy$tipi_Q052h + (8 - surv_tidy$tipi_Q052d)
+surv_tidy$Q052_openness_to_experiences <- surv_tidy$tipi_Q052e + (8 - surv_tidy$tipi_Q052i)
+
+surv_tidy$Q053_PSS_score <- surv_tidy$pss_Q053a + surv_tidy$pss_Q053b + surv_tidy$pss_Q053c + 
+  (5 - surv_tidy$pss_Q053d) + (5 - surv_tidy$pss_Q053e) + surv_tidy$pss_Q053f + 
+  (5 - surv_tidy$pss_Q053g) + (5 - surv_tidy$pss_Q053h) + surv_tidy$pss_Q053i + 
+  surv_tidy$pss_Q053j
+
+surv_tidy$Q054_ESS_score <- rowSums(surv_tidy[, 81:88])
+
+surv_tidy$Q055_Grit_score <- round(((6 - surv_tidy$grit_Q055a) +
+  surv_tidy$grit_Q055b + surv_tidy$grit_Q055c + 
+  (6 - surv_tidy$grit_Q055d) + surv_tidy$grit_Q055e + 
+  (6 - surv_tidy$grit_Q055f) + surv_tidy$grit_Q055g + 
+  surv_tidy$grit_Q055h + (6 - surv_tidy$grit_Q055i) +
+  (6 - surv_tidy$grit_Q055j) + surv_tidy$grit_Q055k +
+  (6 - surv_tidy$grit_Q055l))/12,2)
+
+surv_tidy$Q056_DB_score <- 0.2*rowSums(surv_tidy[, 101:105])
+
+surv_tidy$Q078a_Coffee_with_caffeine <- str_detect(surv_tidy$beverages_Q078, "Coffee with caffeine")
+surv_tidy$Q078b_Tea_with_caffeine <- str_detect(surv_tidy$beverages_Q078, "Tea with caffeine")
+surv_tidy$Q078c_Soda_with_caffeine <- str_detect(surv_tidy$beverages_Q078, "Soda with caffeine")
+surv_tidy$Q078d_Other_caffeinated <- str_detect(surv_tidy$beverages_Q078, "Other caffeinated beverages")
+surv_tidy$Q078e_Decaffeinated_coffee <- str_detect(surv_tidy$beverages_Q078, "Decaffeinated coffee")
+surv_tidy$Q078f_Decaffeinated_tea <- str_detect(surv_tidy$beverages_Q078, "Decaffeinated tea")
+surv_tidy$Q078g_Decaffeinated_soda <- str_detect(surv_tidy$beverages_Q078, "Decaffeinated soda")
+surv_tidy$Q078h_None_of_these <- str_detect(surv_tidy$beverages_Q078, "None of these")
+```
+
+# Your Project Work Starts Here - Replace this Line
+
